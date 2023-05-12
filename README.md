@@ -38,7 +38,7 @@ for Arduino UNO, this component processes the Steer Enable switch, monitors moto
 ## Hardware Packaging
 Isn't this the hardest piece? For now, there are three  pieces of hardware:
 
-[Rover Unit](https://www.dropbox.com/s/5r3vjf7hzsla30m/agRover.png "Rover")
+[Rover Unit](https://www.dropbox.com/s/5r3vjf7hzsla30m/agRover.png?dl=1 "Rover")
 
 1. GNSS RTK Base Station
 2. Rover (containing)
