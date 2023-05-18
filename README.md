@@ -16,10 +16,14 @@ I've eliminated some of the features of mtz8302's software stack - primarily so 
 
 ### agPureAp 
 for the ESP-32, the agPureAp functions solely as the WiFi access point.
+<img src="/images/block-diagram_4.png" alt="BlockDiagram_4" title="Rover Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
 
 ### agRtkBase  & agRtkRover
 for the *SparkFun LoRa Thing Plus(expLoRaBLE) & uBlock ZED-F9P* module in both the agRtkBase (fixed station) and agRtkRover (vehicle). 
-The correction data is being sent from the base station to the vehicle over a LoRa P2P link.  This is not the most cost effective solution but this was my first step so I went with Sparkfun because of their very nice tutorial on RTK.  The base and rover have a minimal serial terminal interface over Bluetooth.  I use the Android Serial Terminal app from my phone to start the survey-in process, check on status of the fix, etc. 
+The correction data is being sent from the base station to the vehicle over a LoRa P2P link.  This is not the most cost effective solution but this was my first step so I went with Sparkfun because of their very nice tutorial on RTK.  The base and rover have a minimal serial terminal interface over Bluetooth.  I use the Android Serial Terminal app from my phone to start the survey-in process, check on status of the fix, etc.
+
+<img src="/images/block-diagram_1.png" alt="BlockDiagram_1" title="Base Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
+<img src="/images/block-diagram_2.png" alt="BlockDiagram_2" title="Rover Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
 
 Just fyi here, I've been impressed with the performance of the Signalplus 12dbi Omni-Directional 824-960MHZ Outdoor LoRa Antenna for the base station which travels around the farm in my vehicle.  I raise a short mast with the SignalPlus from the back of my vehicle, start the survey-in process, and within 30minutes I'm getting RTK fix in the tractor.  The rover side of LoRa uses a full length 915MHz dipole of the *rubber ducky* type.
 
