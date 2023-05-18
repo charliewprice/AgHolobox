@@ -22,22 +22,26 @@ for the ESP-32, the agPureAp functions solely as the WiFi access point.
 for the *SparkFun LoRa Thing Plus(expLoRaBLE) & uBlock ZED-F9P* module in both the agRtkBase (fixed station) and agRtkRover (vehicle). 
 The correction data is being sent from the base station to the vehicle over a LoRa P2P link.  This is not the most cost effective solution but this was my first step so I went with Sparkfun because of their very nice tutorial on RTK.  The base and rover have a minimal serial terminal interface over Bluetooth.  I use the Android Serial Terminal app from my phone to start the survey-in process, check on status of the fix, etc.
 
-<img src="/images/block-diagram_1.png" alt="BlockDiagram_1" title="Base Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
-<img src="/images/block-diagram_2.png" alt="BlockDiagram_2" title="Rover Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
-
-Just fyi here, I've been impressed with the performance of the Signalplus 12dbi Omni-Directional 824-960MHZ Outdoor LoRa Antenna for the base station which travels around the farm in my vehicle.  I raise a short mast with the SignalPlus from the back of my vehicle, start the survey-in process, and within 30minutes I'm getting RTK fix in the tractor.  The rover side of LoRa uses a full length 915MHz dipole of the *rubber ducky* type.
-
-### agSteer
-for the ESP-32. I've chopped out many of the options from mtz8302's original, primarily to make it easier for me to understand and modify.
-
-### agIMU (aka IMUCaster)
-for the *Particle Photon*.  The Bosch BNO085 is wildly at odds with the I2C spec and the ESP-32 doesn't support clock stretching.  And I had many lockups reading the BNO0xx devices with the ESP-32. All of that has pushed me to using the Particle Photon processor to read the IMU and send the data over the WiFi network.  
-
+<img src="/images/block-diagram_5.png" alt="BlockDiagram_5" title="Base Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
+<img src="/images/block-diagram_1.png" alt="BlockDiagram_1" title="Rover Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
 ### agGnssBridge
 for the ESP-32, this component receives data from the ZED-F9P over a serial link and sends it over the WiFi network.
 
+Just fyi here, I've been impressed with the performance of the Signalplus 12dbi Omni-Directional 824-960MHZ Outdoor LoRa Antenna for the base station which travels around the farm in my vehicle.  I raise a short mast with the SignalPlus from the back of my vehicle, start the survey-in process, and within 30minutes I'm getting RTK fix in the tractor.  The rover side of LoRa uses a full length 915MHz dipole of the *rubber ducky* type.
+
+### agIMU (aka IMUCaster)
+for the *Particle Photon*.  The Bosch BNO085 is wildly at odds with the I2C spec and the ESP-32 doesn't support clock stretching.  And I had many lockups reading the BNO0xx devices with the ESP-32. All of that has pushed me to using the Particle Photon processor to read the IMU and send the data over the WiFi network.
+<img src="/images/block-diagram_2.png" alt="BlockDiagram_2" title="IMU Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
+
+
+### agSteer
+for the ESP-32. I've chopped out many of the options from mtz8302's original, primarily to make it easier for me to understand and modify.
+<img src="/images/block-diagram_3.png" alt="BlockDiagram_3" title="Steer Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
 ### agDru (aka Drive Response Unit)
 for Arduino UNO, this component processes the Steer Enable switch, monitors motor current, and activates relays to connect the driver (I'm using the Cytron)
+
+
+
 
 ## Hardware Packaging
 Isn't this the hardest piece? For now, there are three  pieces of hardware:
