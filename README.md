@@ -27,7 +27,7 @@ I've eliminated some of the features of mtz8302's software stack - primarily so 
 ### agRtkRover
 |  |  |
 | ------------- | ------------- |
-| <img src="/images/block-diagram_1.png" alt="BlockDiagram_1" title="GNSS Rover" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The GNSS Rover Unit also uses a *SparkFun LoRa Thing Plus(expLoRaBLE) & uBlock ZED-F9P* module to acquire the GPS fix, and to receive RTCM correction data from the base station.  A Bluetooth serial terminal interface is included to configure the LoRa channel, check fix status, etc. The corrected NMEA sentences (GGA, VTG) are streamed from the ZED-F9P to the GNSS UDP bridge which streams the data onto the mobile WiFi UDP network. The rover uses a full length 915MHz vertical dipole in a *rubber ducky* package.|  
+| <img src="/images/block-diagram_1.png" alt="BlockDiagram_1" title="GNSS Rover" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The GNSS Rover Unit also uses a *SparkFun LoRa Thing Plus(expLoRaBLE) & uBlock ZED-F9P* module to acquire the GPS fix, and to receive RTCM correction data from the base station.  A Bluetooth serial terminal interface is included to configure the LoRa channel, check fix status, etc. The corrected NMEA sentences (GGA, VTG) are streamed from the ZED-F9P over a high-speed serial (UART) connection to the GNSS UDP which broadcasts the packets over UDP network. The rover uses a full length 915MHz vertical dipole in a *rubber ducky* package.|  
 
 ### agIMU (aka IMUCaster)
 |  |  |
