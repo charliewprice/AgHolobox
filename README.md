@@ -37,7 +37,7 @@ I've eliminated some of the features of mtz8302's software stack - primarily so 
 ### agSteer
 |  |  |
 | ------------- | ------------- |
-| <img src="/images/block-diagram_3.png" alt="BlockDiagram_3" title="Steer" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The steer unit interfaces with the wheel angle sensor, motor drive unit, and the AgOpenGPS application. InThe driver unit is packaged separately I've chopped out many of the options from mtz8302's original, primarily to make it easier for me to understand and modify. It drops in from the top and is easily removed when needed.|
+| <img src="/images/block-diagram_3.png" alt="BlockDiagram_3" title="Steer" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The steer unit interfaces with the wheel angle sensor, motor drive unit, and the AgOpenGPS application. InThe driver unit is packaged separately I've chopped out many of the options from mtz8302's original, primarily to make it easier for me to understand and modify. |
 
 ### agDru (aka Drive Response Unit)
 for Arduino UNO, this component processes the Steer Enable switch, monitors motor current, and activates relays to connect the driver (I'm using the Cytron)
@@ -59,7 +59,7 @@ Isn't this the hardest piece? For now, there are three  pieces of hardware:
 ### The Rover in the John Deere 6420
 |  |  |
 | ------------- | ------------- |
-| <img src="/images/agRover.png" alt="agRover" title="Rover Package" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | I've mounted the package in the JD6420 on the left side window of the cab to keep the IMU in a stable location.|
+| <img src="/images/agRover.png" alt="agRover" title="Rover Package" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | I've mounted the package in the JD6420 on the left side window of the cab to keep the IMU in a stable location. It drops in from the top and is easily removed when needed.|There's a buzzer on the front panel for general use -- it beeps a few times on boot-up and whenever a parameter in the EEPROM is changed.   
 
 ## Drive System
 I'm using a Phidget motor with a gear drive system similar to others.
