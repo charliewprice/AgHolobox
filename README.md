@@ -15,19 +15,21 @@ I've eliminated some of the features of mtz8302's software stack - primarily so 
  * ADS1115 as the A/D convertor for the wheel angle sensor
 
 ### agPureAp 
-for the ESP-32, the agPureAp functions solely as the WiFi access point.
-<img src="/images/block-diagram_4.png" alt="BlockDiagram_4" title="Rover Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
+|  |  |
+| ------------- | ------------- |
+| <img src="/images/block-diagram_4.png" alt="BlockDiagram_4" title="Rover Unit" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | AgOpenGPS interacts with the other components in the solution via UDP packets. The agPureAp acts as a cheap and stealthy WiFi access point for a WiFi network in the tractor's cab using the ESP-32 SoftAp library.|
 
-### agRtkBase  & agRtkRover
-for the *SparkFun LoRa Thing Plus(expLoRaBLE) & uBlock ZED-F9P* module in both the agRtkBase (fixed station) and agRtkRover (vehicle). 
-The correction data is being sent from the base station to the vehicle over a LoRa P2P link.  This is not the most cost effective solution but this was my first step so I went with Sparkfun because of their very nice tutorial on RTK.  The base and rover have a minimal serial terminal interface over Bluetooth.  I use the Android Serial Terminal app from my phone to start the survey-in process, check on status of the fix, etc.
 
-<img src="/images/block-diagram_5.png" alt="BlockDiagram_5" title="Base Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
-<img src="/images/block-diagram_1.png" alt="BlockDiagram_1" title="Rover Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
-### agGnssBridge
-for the ESP-32, this component receives data from the ZED-F9P over a serial link and sends it over the WiFi network.
+### agRtkBase
+|  |  |
+| ------------- | ------------- |
+| <img src="/images/block-diagram_5.png" alt="BlockDiagram_5" title="GNSS Base" align="left" width=1080 style="display: inline-block; margin: 0 auto;">  | The GNSS Base Station uses a *SparkFun LoRa Thing Plus(expLoRaBLE) & uBlock ZED-F9P* module to acquire the GPS fix, and to generate and send RTCM correction data to the tractor over a point-to-point LoRa network.  A Bluetooth serial terminal interface is included to start and stop the survey-in procedure, configure the LoRa channel, check fix status, etc. I use the Android Serial Terminal app from my phone to control the base station.  Just fyi here, I've been impressed with the performance of the Signalplus 12dbi Omni-Directional 824-960MHZ Outdoor LoRa Antenna for the base station which travels around the farm in my vehicle.  I raise a short mast with the SignalPlus from the back of my vehicle, start the survey-in process, and within 30minutes I'm getting RTK fix in the tractor.|
+### agRtkRover
+|  |  |
+| ------------- | ------------- |
+| <img src="/images/block-diagram_1.png" alt="BlockDiagram_1" title="GNSS Rover" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The GNSS Rover Unit also uses a *SparkFun LoRa Thing Plus(expLoRaBLE) & uBlock ZED-F9P* module to acquire the GPS fix, and to receive RTCM correction data from the base station.  A Bluetooth serial terminal interface is included to configure the LoRa channel, check fix status, etc. The corrected NMEA sentences (GGA, VTG) are streamed from the ZED-F9P to the GNSS UDP bridge which streams the data onto the mobile WiFi UDP network. The rover uses a full length 915MHz vertical dipole in a *rubber ducky* package.|
 
-Just fyi here, I've been impressed with the performance of the Signalplus 12dbi Omni-Directional 824-960MHZ Outdoor LoRa Antenna for the base station which travels around the farm in my vehicle.  I raise a short mast with the SignalPlus from the back of my vehicle, start the survey-in process, and within 30minutes I'm getting RTK fix in the tractor.  The rover side of LoRa uses a full length 915MHz dipole of the *rubber ducky* type.
+  
 
 ### agIMU (aka IMUCaster)
 for the *Particle Photon*.  The Bosch BNO085 is wildly at odds with the I2C spec and the ESP-32 doesn't support clock stretching.  And I had many lockups reading the BNO0xx devices with the ESP-32. All of that has pushed me to using the Particle Photon processor to read the IMU and send the data over the WiFi network.
