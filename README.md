@@ -27,23 +27,20 @@ I've eliminated some of the features of mtz8302's software stack - primarily so 
 ### agRtkRover
 |  |  |
 | ------------- | ------------- |
-| <img src="/images/block-diagram_1.png" alt="BlockDiagram_1" title="GNSS Rover" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The GNSS Rover Unit also uses a *SparkFun LoRa Thing Plus(expLoRaBLE) & uBlock ZED-F9P* module to acquire the GPS fix, and to receive RTCM correction data from the base station.  A Bluetooth serial terminal interface is included to configure the LoRa channel, check fix status, etc. The corrected NMEA sentences (GGA, VTG) are streamed from the ZED-F9P to the GNSS UDP bridge which streams the data onto the mobile WiFi UDP network. The rover uses a full length 915MHz vertical dipole in a *rubber ducky* package.|
-
-  
+| <img src="/images/block-diagram_1.png" alt="BlockDiagram_1" title="GNSS Rover" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The GNSS Rover Unit also uses a *SparkFun LoRa Thing Plus(expLoRaBLE) & uBlock ZED-F9P* module to acquire the GPS fix, and to receive RTCM correction data from the base station.  A Bluetooth serial terminal interface is included to configure the LoRa channel, check fix status, etc. The corrected NMEA sentences (GGA, VTG) are streamed from the ZED-F9P to the GNSS UDP bridge which streams the data onto the mobile WiFi UDP network. The rover uses a full length 915MHz vertical dipole in a *rubber ducky* package.|  
 
 ### agIMU (aka IMUCaster)
-for the *Particle Photon*.  The Bosch BNO085 is wildly at odds with the I2C spec and the ESP-32 doesn't support clock stretching.  And I had many lockups reading the BNO0xx devices with the ESP-32. All of that has pushed me to using the Particle Photon processor to read the IMU and send the data over the WiFi network.
-<img src="/images/block-diagram_2.png" alt="BlockDiagram_2" title="IMU Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
-
+|  |  |
+| ------------- | ------------- |
+| <img src="/images/block-diagram_2.png" alt="BlockDiagram_2" title="IMU" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The Bosch BNO085 is wildly at odds with the I2C spec and the ESP-32 doesn't support clock stretching.  I've seen many lockups reading the BNO0xx devices with the ESP-32. I've decided to locate the IMU on a separate processor.  For now I'm using a Particle Photon which has built-in WiFi.  At some point I want to receive the GGA messages here and use the IMU roll, pitch, heading, to adjust the coordinates and generate the custom $PANDA sentence which AgOpenGPS supports.  I'm fuzzy on all of that at present.|
 
 ### agSteer
-for the ESP-32. I've chopped out many of the options from mtz8302's original, primarily to make it easier for me to understand and modify.
-<img src="/images/block-diagram_3.png" alt="BlockDiagram_3" title="Steer Unit" align="left" width=100% style="display: inline-block; margin: 0 auto;">
+|  |  |
+| ------------- | ------------- |
+| <img src="/images/block-diagram_3.png" alt="BlockDiagram_3" title="Steer" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The steer unit interfaces with the wheel angle sensor, motor drive unit, and the AgOpenGPS application. InThe driver unit is packaged separately I've chopped out many of the options from mtz8302's original, primarily to make it easier for me to understand and modify. It drops in from the top and is easily removed when needed.|
+
 ### agDru (aka Drive Response Unit)
 for Arduino UNO, this component processes the Steer Enable switch, monitors motor current, and activates relays to connect the driver (I'm using the Cytron)
-
-
-
 
 ## Hardware Packaging
 Isn't this the hardest piece? For now, there are three  pieces of hardware:
@@ -60,7 +57,9 @@ Isn't this the hardest piece? For now, there are three  pieces of hardware:
   * Cytron MD30C Driver
 
 ### The Rover in the John Deere 6420
-<img src="/images/agRover.png" alt="Rover Unit" title="Rover Unit" width=360 height=309 style="display: inline-block; margin: 0 auto; max-width: 300px">
+|  |  |
+| ------------- | ------------- |
+| <img src="/images/agRover.png" alt="agRover" title="Rover Package" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | I've mounted the package in the JD6420 on the left side window of the cab to keep the IMU in a stable location.|
 
 ## Drive System
 I'm using a Phidget motor with a gear drive system similar to others.
