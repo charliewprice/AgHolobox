@@ -24,12 +24,12 @@ boolean blink;
 //int LED_BUILTIN = 2;
 TaskHandle_t taskHandle_LEDBlink;
 
-void setup() {
+void osetup() {
  //Serial2.begin(SERIAL2_BAUD, SERIAL_8N1, RXD2, TXD2);
  //Serial.println("Serial 2 started.");
  
   #if defined(SERIAL_DEBUG)
- Serial.begin(115200);
+ Serial.begin(230400);
  //while(!Serial) {
      
  //}
@@ -61,9 +61,19 @@ void setup() {
  Serial.println(WiFi.softAPIP());
  
  pinMode(LED_BUILTIN, OUTPUT);
- xTaskCreate(WiFi_LED_blink, "WiFiLEDBlink", 3072, NULL, 0, &taskHandle_LEDBlink);
+ //xTaskCreate(WiFi_LED_blink, "WiFiLEDBlink", 3072, NULL, 0, &taskHandle_LEDBlink);
+}
+
+void setup() {
+ Serial.begin(230400);
+ WiFi.softAPConfig(local_IP, gateway, subnet);
+ WiFi.softAP(ssid, passphrase,3,0,5);
+ delay(2000);
+ Serial.println("Ready");
+ Serial.print("AgPureAp IP address = ");
+ Serial.println(WiFi.softAPIP()); 
 }
 void loop() { 
-  vTaskDelay(3000); 
+  vTaskDelay(3); 
   //flash(WiFi.softAPgetStationNum());  
 }

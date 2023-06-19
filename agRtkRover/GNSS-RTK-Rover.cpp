@@ -1052,7 +1052,7 @@ void setup()
 
   Serial.println(F("NMEA messages configured  for output on ZED-F9P UART2/Bluetooth port."));
 
-  gnssRcvr.setSerialRate(115200, COM_PORT_UART2, _MAX_WAIT);
+  //gnssRcvr.setSerialRate(115200, COM_PORT_UART2, _MAX_WAIT);
 
   //gnssRcvr.setNMEAOutputPort(Serial1); // echo all NMEA data to Serial for debugging. This is slow.
 

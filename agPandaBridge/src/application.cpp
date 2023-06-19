@@ -7,23 +7,40 @@
   
   Hardware Connections:
   ZED9-FP is connected to the Rx & Tx pins of the Photon
+  Using a serial buffer to grab the bytes
+
+  06-01-2023 VTG sentence is being appended to the $PANDA message
+  	  	  	 -looks like the Serial buffer is overflowing. Change
+  	  	  	  processSerial to read characters until the buffer is
+  	  	  	  empty or it sees the newline character.
 */
+
+
 
 #include "application.h"
 #include <Wire.h>
 #include "SparkFun_BNO080_Arduino_Library.h"
 #include "SerialBufferRK.h"
 
+#define PANDA_MODE	1
+#define NMEA_MODE	2
+
+#define MODE_PIN 6
+uint8_t sendMode;
+
+#define SERIAL1_BAUD 230400  //this is max that the Photon (Gen2) can handle
 SerialBuffer<4096> serBuf(Serial1);
 
 SYSTEM_MODE(MANUAL);
 SYSTEM_THREAD(ENABLED);
 
 #define CONST_180_DIVIDED_BY_PI 57.2957795130823    // 180/pi
-
 #define NEWLINE 10
 #define COMMA 44 
-char packetBuffer[255]; //buffer to hold outgoing packet
+
+char panda[100];
+
+char packetBuffer[255]; //buffer to hold incoming serial data
 int packetPtr;
 char c;
 
@@ -36,8 +53,6 @@ char speedKnots[10];
 
 // Conversion to Hexidecimal
 const char* asciiHex = "0123456789ABCDEF";
-// NMEA messages have max length of 82 including th $ and ending <LF>
-//char serialBuffer[255];
 
 UDP Udp;
 
@@ -47,16 +62,20 @@ static uint8_t ipDestination[] = {192,168,1,255};
 //hello packet 
 //IMU Reply 	                     121  121  5 * 	* 	* 	* 	* 	CRC
 uint8_t helloFromIMU[] = { 128, 129, 121, 121, 5, 0, 0, 0, 0, 0, 71 };
-//loop time variables in microseconds  
-const uint16_t IMU_LOOP_MILLIS = 20;  //50Hz    
-uint32_t lastTime = IMU_LOOP_MILLIS;
-uint32_t currentTime = IMU_LOOP_MILLIS;
+//loop time variables in microseconds
+
+const uint16_t IMU_PANDALOOP_MILLIS = 20;  //50Hz
+const uint16_t IMU_NMEALOOP_MILLIS = 100; //10Hz
+
+uint32_t lastImuTimeMillis = millis();
+uint32_t currentTimeMillis = millis();
 
 BNO080 bno08x;
 
 float bno08xHeading = 0;
 double bno08xRoll = 0;
 double bno08xPitch = 0;
+int16_t bno08xHeading10x = 0, bno08xRoll10x = 0, bno08xPitch10x = 0;
 
 //the default network address
 struct ConfigIP {
@@ -83,6 +102,7 @@ uint16_t portMy = 5121;
 static uint8_t ipDest[] = { 192,168,1,255 };
 uint16_t portDest = 9999; //AOG listens here
 
+//uint8_t data[] = {128, 129, 121, 121, 8, 0,0,0,0, 0,0,0,0, 15};
 uint8_t data[] = {128, 129, 121, 211, 8, 0,0,0,0, 0,0,0,0, 15};
 int16_t dataSize = sizeof(data); 
 
@@ -192,7 +212,6 @@ $PANDA,202133.60,3516.4704286,N,08038.8960440,W,2,12,0.46,210.819,,0.036,26,6,-2
   CHKSUM
 */
 
-char panda[100];
 void buildPanda(char* panda, const char* nmea) {
     strcpy(panda, "$PANDA,");
     strcat(panda, nmea + 1*NMEAFIELDLENGTH); //fixTime); Field #1
@@ -218,7 +237,7 @@ void buildPanda(char* panda, const char* nmea) {
     strcat(panda, nmea + 13*NMEAFIELDLENGTH); //ageDGPS); Field #13
     strcat(panda, ",");
     //11
-    strcat(panda, speedKnots);   // not using this
+    strcat(panda, speedKnots);   // from VTG message
     strcat(panda, ",");
     //12
     // generate string data for $PANDA sentence
@@ -266,13 +285,16 @@ void buildPanda(char* panda, const char* nmea) {
   
 void setup()
 {
+
+  pinMode(MODE_PIN, INPUT_PULLUP);
+
   Serial.begin(115200);
   Serial.println();
   Serial.println("Particle Panda");
   delay(5000);
   
   //ZED-9FP is connected over Serial1
-  Serial1.begin(115200);
+  Serial1.begin(SERIAL1_BAUD);
   serBuf.setup();
   
   Wire.begin();
@@ -332,13 +354,13 @@ void parseAogPacket(byte* udpData, uint16_t len, IPAddress srcIp) {
         for (int16_t i = 0; i < len; i++) {
           Serial.print(udpData[i],HEX); Serial.print("\t"); } Serial.println(len);
         */      
-// Hello 			7F 	127 	C8 	200 	3 	Module ID 	0 	0 	CRC
-// Scan Request		7B 	123 	CA 	202 	3 	202 	202 	5 	CRC
-// Subnet Change 	7F 	127 	C9 	201 	5 	201 	201 	IP_One 	IP_Two 	IP_Three 	CRC
+        // Hello 			7F 	127 	C8 	200 	3 	Module ID 	0 	0 	CRC
+        // Scan Request		7B 	123 	CA 	202 	3 	202 	202 	5 	CRC
+        // Subnet Change 	7F 	127 	C9 	201 	5 	201 	201 	IP_One 	IP_Two 	IP_Three 	CRC
         if (udpData[0] == 0x80 && udpData[1] == 0x81) {
             if ((udpData[2] == 0x7F) && (udpData[3] == 200)) {
 			  // Hello from AgIO
-              Serial.println("Hello from AgIO!");              
+              //Serial.println("Hello from AgIO!");
               sendUdp(helloFromIMU, sizeof(helloFromIMU), portMy, ipDest, portDest);			  
             } else if ((udpData[2] == 0x7F) && (udpData[3] == 201)) {
 			  // Subnet Change			  
@@ -390,45 +412,33 @@ void parseAogPacket(byte* udpData, uint16_t len, IPAddress srcIp) {
  * back to the caller so that the buffer can be processed
  */
 uint8_t processSerialBuffer() {
-  if (serBuf.available()) { 
+  while (serBuf.available()) {
     c = serBuf.read();
-  //if(Serial1.available()) {
-    //c = Serial1.read();
     packetBuffer[packetPtr++] = c;
-    if (c == NEWLINE)  { //end of data from ZED9-FP
-      //Serial.println(packetBuffer);
-      //packetBuffer[packetPtr] = 0;
-      //for (uint8_t k=0; k<packetPtr; k++)
-      //  Serial.print(packetBuffer[k]);
-      //Serial.println();
-      //Serial.print(">"); Serial.println(packetBuffer);
-      //packetPtr = 0;
+    if (c == NEWLINE)  {
+      //NL marks end of message from ZED9-FP
       return 1;
-    } else
-      return 0;
-  } else
-      return 0;
+    }
+  }
+  return 0;
 }
 
 void processZedMessage() {
-  /*
-   *  only sending this in non-PANDA mode
-   */
-  //Serial.println("zed");
-  //sendUdp((uint8_t*)packetBuffer, packetPtr, portMy, ipDest, portDest);
-  /*
-   * if this is the NMEA GGA message create the $PANDA message
-   */
-  
   uint8_t nmeaType = parseNmeaSentence(nmea, packetBuffer, packetPtr);
   if (nmeaType==NMEA_GGATYPE) {
-    buildPanda(panda, nmea);
-    sendUdp((uint8_t*)panda, sizeof(panda), portMy, ipDestination, portDestination);
-    Serial.print("GGA --> "); Serial.println(panda);
-    //Serial.println(packetBuffer);
+    if (sendMode == PANDA_MODE) {
+      buildPanda(panda, nmea);
+      sendUdp((uint8_t*)panda, sizeof(panda), portMy, ipDestination, portDestination);
+      memset(panda, 0, sizeof(panda));
+    } else
+      sendUdp((uint8_t*)packetBuffer, packetPtr, portMy, ipDestination, portDestination);
+
   } else if (nmeaType==NMEA_VTGTYPE) {  
-    // vtg Speed knots parser.getArg(4, speedKnots);      
-    strcpy(speedKnots, nmea + 5*NMEAFIELDLENGTH); 
+    // vtg Speed knots parser.getArg(4, speedKnots);
+    if (sendMode == PANDA_MODE)
+      strcpy(speedKnots, nmea + 5*NMEAFIELDLENGTH);
+    else
+      sendUdp((uint8_t*)packetBuffer, packetPtr, portMy, ipDestination, portDestination);
   }
   //Serial.println(packetBuffer);
   c=0;
@@ -444,6 +454,7 @@ void sendImuData() {
     int8_t idx = (int8_t) imuBufferPtr - IMU_BUFFER_LAG;
     if (idx<0)
       idx = IMU_BUFFER_LAG + idx;
+    /*
     data[5] = (uint8_t)(imuBuffer[idx].heading * 10);
     data[6] = ((int16_t)(imuBuffer[idx].heading * 10)) >> 8;
     //the roll x10 - use pitch angle instead
@@ -451,6 +462,15 @@ void sendImuData() {
     //data[8] = bno08xRoll10x >> 8;
     data[7] = (uint8_t)(imuBuffer[idx].pitch * 10);
     data[8] = ((uint16_t)(imuBuffer[idx].pitch * 10)) >> 8;
+    */
+    //the heading x10
+          data[5] = (uint8_t)bno08xHeading10x;
+          data[6] = bno08xHeading10x >> 8;
+          //the roll x10 - use pitch angle instead
+          //data[7] = (uint8_t)bno08xRoll10x;
+          //data[8] = bno08xRoll10x >> 8;
+          data[7] = (uint8_t)bno08xPitch10x;
+          data[8] = bno08xPitch10x >> 8;
     //add the checksum
     int16_t CK_A = 0;
     for (int16_t i = 2; i < dataSize - 1; i++) {
@@ -458,11 +478,20 @@ void sendImuData() {
     }
     data[dataSize - 1] = CK_A;
     Serial.println("Sending IMU data");
+    for(uint8_t k=0; k<sizeof(data); k++) {
+    	Serial.print(data[k]); Serial.print(" ");
+    }
+    Serial.println();
     sendUdp(data, sizeof(data), portMy, ipDestination, portDestination);
     
 }
 
 void loop() {
+  if (digitalRead(MODE_PIN)==0)
+    sendMode = PANDA_MODE;
+  else
+	sendMode = NMEA_MODE;
+
   //Particle.process();  //causes Serial1 problems
   
   /*
@@ -478,20 +507,20 @@ void loop() {
   
   /*
    * process messages from the ZED9-FP on the Serial port
-   */ 
-  
+   */
   if (processSerialBuffer()==1) {
     processZedMessage();  
   }
   
-  //processSerialBuffer();
-    
   /*
    *  read the IMU data into the circular buffer
    */
-  currentTime = millis();  
-  if (currentTime - lastTime >= IMU_LOOP_MILLIS) {    
-    lastTime = currentTime;
+  currentTimeMillis = millis();
+  if ( ((sendMode==PANDA_MODE)
+	     && (currentTimeMillis - lastImuTimeMillis >= IMU_PANDALOOP_MILLIS)) ||
+	   ((sendMode==NMEA_MODE)
+	     && (currentTimeMillis - lastImuTimeMillis >= IMU_NMEALOOP_MILLIS))	) {
+    lastImuTimeMillis = currentTimeMillis;
     if (bno08x.dataAvailable() == true) {
       bno08xHeading = (bno08x.getYaw()) * CONST_180_DIVIDED_BY_PI; // Convert yaw / heading to degrees
       bno08xHeading = -bno08xHeading; //BNO085 counter clockwise data to clockwise data
@@ -503,11 +532,15 @@ void loop() {
       bno08xRoll = (bno08x.getRoll()) * CONST_180_DIVIDED_BY_PI; //Convert roll to degrees
       bno08xPitch = (bno08x.getPitch()) * CONST_180_DIVIDED_BY_PI; // Convert pitch to degrees
       
+      bno08xHeading10x = (int16_t)(bno08xHeading * 10);
+      bno08xRoll10x = (int16_t)(bno08xRoll * 10);
+      bno08xPitch10x = (int16_t) (bno08xPitch * 10);
       /*
        * only sending this in non-PANDA mode
        */
-      //sendImuData();      
-      
+      if (sendMode == NMEA_MODE)
+        sendImuData();
+
       //stuff it into the circular buffer
       imuBuffer[imuBufferPtr].heading = bno08xHeading;
       imuBuffer[imuBufferPtr].roll = bno08xRoll;
@@ -515,7 +548,9 @@ void loop() {
       if (imuBufferPtr<IMU_BUFFER_SIZE)
         imuBufferPtr += 1;
       else
-        imuBufferPtr = 0;          
+        imuBufferPtr = 0;
+
+
     }    
   } //end of timed loop  
 
