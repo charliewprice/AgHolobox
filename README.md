@@ -46,7 +46,7 @@ The agIMU component has been deprecated. the BNO085 is now with the agPandaBridg
 | <img src="/images/block-diagram_3.png" alt="BlockDiagram_3" title="Steer" align="left" width=640 style="display: inline-block; margin: 0 auto;">  | The steer unit interfaces with the wheel angle sensor, motor drive unit, and the AgOpenGPS application. In the driver unit is packaged separately I've chopped out many of the options from mtz8302's original, primarily to make it easier for me to understand and modify. |
 
 ### agDru (aka Drive Response Unit)
-for Arduino UNO, this component processes the Steer Enable switch, monitors motor current, and activates relays to connect the driver (I'm using the Cytron)
+for Arduino UNO, this component processes the Steer Enable switch, monitors motor current, and activates relays to connect the driver (I'm using the Cytron) output to the motor terminals. This allows relatively free operator control of the wheel without having to mechanically disengage the gears.
 
 ### agPandaBridge
 This component is managed by a Gen 1 Particle Photon MCU and receives GNSS data from the ZED-F9P over serial port (UART).  The BNO085 is connected via I2C.  GNSS and IMU data are combined in the new PANDA sentence and broadcast over UDP to the agOpenGPS application.
